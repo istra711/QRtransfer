@@ -89,7 +89,8 @@ ant dist
 | Action | Shortcut |
 |--------|----------|
 | QR from clipboard | `Ctrl+Shift+Q` |
-| QR from file | `Ctrl+Shift+F` |
+| QR from image file | `Ctrl+Shift+F` |
+| QR from PDF | `Ctrl+Shift+P` |
 
 ## Example EPC QR Code
 

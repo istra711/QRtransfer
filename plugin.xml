@@ -15,6 +15,17 @@
     <include>.*\.class</include>
   </classfinder>
 
+  <menu>
+    <item name="QR-Code">
+      <item name="Aus Zwischenablage" shortcut="CTRL+SHIFT+Q"
+            action="de.willuhn.jameica.hbci.qrtransfer.action.QRCodeAction" />
+      <item name="Aus Datei" shortcut="CTRL+SHIFT+F"
+            action="de.willuhn.jameica.hbci.qrtransfer.action.QRFileAction" />
+      <item name="Aus PDF-Datei" shortcut="CTRL+SHIFT+P"
+            action="de.willuhn.jameica.hbci.qrtransfer.action.QRPdfAction" />
+    </item>
+  </menu>
+
   <navigation>
     <item id="hibiscus.navi.sepatransfer">
       <item name="QR-Code Überweisung" icon-close="qr-icon.png" icon-open="qr-icon.png">
