@@ -61,6 +61,8 @@
         <copy todir="${dist.dir}/${plugin.name}/lib">
             <fileset dir="${lib.dir}">
                 <include name="**/*.jar"/>
+                <exclude name="jameica.jar"/>
+                <exclude name="hibiscus.jar"/>
             </fileset>
         </copy>
         <copy todir="${dist.dir}/${plugin.name}/img">
@@ -68,6 +70,13 @@
                 <include name="**/*"/>
             </fileset>
         </copy>
+    </target>
+
+    <!-- Create installable ZIP for Jameica -->
+    <target name="zip" depends="dist">
+        <zip destfile="${dist.dir}/${plugin.name}-${plugin.version}.zip"
+             basedir="${dist.dir}"
+             includes="${plugin.name}/**"/>
     </target>
 
     <!-- Clean -->
