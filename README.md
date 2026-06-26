@@ -48,11 +48,10 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 ## Installation
 
 1. Download the latest release from the [Releases](https://github.com/istra711/hbci.qrtransfer/releases) page
-2. Extract the `hbci.qrtransfer` folder into your Jameica plugins directory:
-   - **Windows:** `C:\Programme\Jameica\plugins\` or portable: `<Jameica-Verzeichnis>\plugins\`
-   - **Linux:** `~/.jameica/plugins/`
-   - **Mac:** `~/Library/Jameica/plugins/`
-3. Restart Jameica
+2. Open Jameica
+3. Go to **Datei > Plugins online suchen... > Plugin manuell installieren...**
+4. Select `hbci.qrtransfer-1.0.0.zip`
+5. Restart Jameica
 
 ### Manual Build
 
