@@ -2,6 +2,27 @@
 
 A Jameica plugin that reads SEPA payment QR codes and creates transfer drafts in the Hibiscus online banking application.
 
+## About This Project - AI Feasibility Study
+
+This plugin is the result of a **feasibility study** to test the capabilities of current AI systems. The entire development - from the initial concept to the final upload on GitHub - was carried out entirely by AI. **The human author did not write a single line of code.**
+
+The project demonstrates that modern AI assistants can handle complex, multi-step software engineering tasks autonomously, including:
+- Understanding domain-specific frameworks (Jameica/Hibiscus)
+- Implementing multiple input methods (clipboard, file, PDF)
+- Working with external libraries (ZXing, Apache PDFBox)
+- Debugging and fixing integration issues
+- Setting up build systems (Apache Ant)
+- Managing Git repositories and publishing to GitHub
+
+The result exceeded expectations and shows that AI can serve as a capable "co-developer" for real-world applications.
+
+### Development Environment
+
+- **AI Assistant:** [OpenCode](https://opencode.ai) using the `mimo/mimo-v2-free` model
+- **Operating System:** Windows
+- **Human Role:** Project owner and tester - provided requirements, tested the plugin in Jameica, reported bugs, and guided the development through natural language conversation
+- **AI Role:** Full-stack developer - wrote all Java code, XML configuration, build scripts, managed dependencies, and handled Git/GitHub operations
+
 ## Features
 
 - **Three input methods:**
