@@ -1,0 +1,27 @@
+# Build directories
+build/
+dist/
+
+# Compiled class files
+*.class
+
+# JAR files (can be downloaded via Maven)
+lib/*.jar
+
+# IDE files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+
+# Stubs (only needed for initial compilation)
+stubs/

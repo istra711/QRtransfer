@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="hbci.qrtransfer" default="dist" basedir=".">
+    <description>Hibiscus QR-Transfer Plugin</description>
+
+    <!-- Properties -->
+    <property name="src.dir" value="src"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="build.dir" value="build"/>
+    <property name="build.classes" value="${build.dir}/classes"/>
+    <property name="build.stubs" value="${build.dir}/stubs"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="plugin.name" value="hbci.qrtransfer"/>
+    <property name="plugin.version" value="1.0.0"/>
+    <property name="jameica.home" value="C:/Programme/Jameica"/>
+
+    <!-- Classpath -->
+    <path id="compile.classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${jameica.home}">
+            <include name="jameica.jar"/>
+        </fileset>
+        <fileset dir="${jameica.home}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Initialize -->
+    <target name="init">
+        <mkdir dir="${build.classes}"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <!-- Compile -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}"
+               destdir="${build.classes}"
+               classpathref="compile.classpath"
+               includeantruntime="false"
+               source="1.8"
+               target="1.8"
+               encoding="UTF-8">
+        </javac>
+    </target>
+
+    <!-- Create JAR -->
+    <target name="jar" depends="compile">
+        <jar destfile="${dist.dir}/${plugin.name}.jar" basedir="${build.classes}">
+            <manifest>
+                <attribute name="Built-By" value="QR-Transfer Plugin"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Create distribution directory -->
+    <target name="dist" depends="jar">
+        <mkdir dir="${dist.dir}/${plugin.name}"/>
+        <copy file="${dist.dir}/${plugin.name}.jar" todir="${dist.dir}/${plugin.name}/"/>
+        <copy file="plugin.xml" todir="${dist.dir}/${plugin.name}/"/>
+        <copy todir="${dist.dir}/${plugin.name}/lib">
+            <fileset dir="${lib.dir}">
+                <include name="**/*.jar"/>
+            </fileset>
+        </copy>
+        <copy todir="${dist.dir}/${plugin.name}/img">
+            <fileset dir="img">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- Clean -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+</project>
