@@ -47,6 +47,20 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
   - Creates a pre-filled transfer draft ready for review and sending
   - Supports both domestic (German) and international SEPA transfers
 
+## Screenshots
+
+### Plugin installed in Jameica
+![Jameica with QRtransfer plugin](img/JH1.png)
+
+### Navigation tree with QR-Code submenu
+![Navigation tree](img/JH3.png)
+
+### QR-Code menu with keyboard shortcuts
+![QR-Code menu](img/JH4.png)
+
+### Parsed SEPA data from QR code
+![SEPA data preview](img/JH2.png)
+
 ## Installation
 
 1. Download the latest release from the [Releases](https://github.com/istra711/QRtransfer/releases) page
