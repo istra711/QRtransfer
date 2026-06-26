@@ -49,7 +49,7 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 
 ## Installation
 
-1. Download the latest release from the [Releases](https://github.com/istra711/hbci.qrtransfer/releases) page
+1. Download the latest release from the [Releases](https://github.com/istra711/QRtransfer/releases) page
 2. Open Jameica
 3. Go to **Datei > Plugins online suchen... > Plugin manuell installieren...**
 4. Select `hbci.qrtransfer-1.0.0.zip`
