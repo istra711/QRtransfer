@@ -8,7 +8,9 @@ import de.willuhn.jameica.hbci.qrtransfer.parser.EmvParser;
 import de.willuhn.jameica.hbci.qrtransfer.parser.EpcParser;
 import de.willuhn.jameica.hbci.qrtransfer.parser.ParserException;
 import de.willuhn.jameica.hbci.qrtransfer.parser.QrCodeParser;
+import de.willuhn.jameica.system.Application;
 import de.willuhn.util.ApplicationException;
+import de.willuhn.util.I18N;
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
@@ -27,6 +29,18 @@ import javax.imageio.ImageIO;
 
 public class QRFileAction implements Action {
 
+    private static I18N i18n;
+
+    private static synchronized I18N getI18n() {
+        if (i18n == null) {
+            i18n = Application.getPluginLoader()
+                .getPlugin("de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin")
+                .getResources()
+                .getI18N();
+        }
+        return i18n;
+    }
+
     private final QrCodeParser[] parsers = {
         new EpcParser(),
         new EmvParser()
@@ -34,27 +48,26 @@ public class QRFileAction implements Action {
 
     @Override
     public void handleAction(Object context) throws ApplicationException {
+        final I18N i = getI18n();
         try {
             Shell shell = Display.getCurrent().getActiveShell();
             FileDialog dialog = new FileDialog(shell, SWT.OPEN);
-            dialog.setText("QR-Code-Bild auswählen");
+            dialog.setText(i.tr("select.qrcode.image"));
             dialog.setFilterExtensions(new String[]{"*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"});
-            dialog.setFilterNames(new String[]{"Bilddateien (*.png, *.jpg)", "Alle Dateien (*.*)"});
+            dialog.setFilterNames(new String[]{i.tr("filter.image.files"), i.tr("filter.all.files")});
 
             String path = dialog.open();
-            if (path == null) {
-                return;
-            }
+            if (path == null) return;
 
             File file = new File(path);
             BufferedImage image = ImageIO.read(file);
             if (image == null) {
-                throw new ApplicationException("Datei konnte nicht als Bild gelesen werden: " + file.getName());
+                throw new ApplicationException(i.tr("error.file.not.image", file.getName()));
             }
 
             String qrText = decodeQRCode(image);
             if (qrText == null || qrText.isEmpty()) {
-                throw new ApplicationException("Kein QR-Code in der Datei erkannt: " + file.getName());
+                throw new ApplicationException(i.tr("error.no.qrcode.file", file.getName()));
             }
 
             SepaData sepaData = parseQrText(qrText);
@@ -63,7 +76,7 @@ public class QRFileAction implements Action {
         } catch (ApplicationException e) {
             throw e;
         } catch (Exception e) {
-            throw new ApplicationException("Fehler: " + e.getMessage(), e);
+            throw new ApplicationException(i.tr("error.param", e.getMessage()), e);
         }
     }
 
@@ -90,6 +103,6 @@ public class QRFileAction implements Action {
                 return data;
             }
         }
-        throw new ParserException("Kein Parser für QR-Code-Format gefunden.");
+        throw new ParserException(getI18n().tr("error.no.parser.format"));
     }
 }

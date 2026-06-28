@@ -1,9 +1,5 @@
 package de.willuhn.jameica.hbci.qrtransfer.action;
 
-import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamPanel;
-import com.github.sarxos.webcam.WebcamResolution;
-
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
@@ -16,20 +12,32 @@ import de.willuhn.jameica.hbci.qrtransfer.parser.EmvParser;
 import de.willuhn.jameica.hbci.qrtransfer.parser.EpcParser;
 import de.willuhn.jameica.hbci.qrtransfer.parser.ParserException;
 import de.willuhn.jameica.hbci.qrtransfer.parser.QrCodeParser;
+import de.willuhn.jameica.system.Application;
 import de.willuhn.util.ApplicationException;
+import de.willuhn.util.I18N;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Method;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Aktion zum Lesen eines QR-Codes ueber die Webcam.
- */
 public class QRWebcamAction implements Action {
+
+    private static I18N i18n;
+
+    private static synchronized I18N getI18n() {
+        if (i18n == null) {
+            i18n = Application.getPluginLoader()
+                .getPlugin("de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin")
+                .getResources()
+                .getI18N();
+        }
+        return i18n;
+    }
 
     private final QrCodeParser[] parsers = {
         new EpcParser(),
@@ -38,79 +46,145 @@ public class QRWebcamAction implements Action {
 
     @Override
     public void handleAction(Object context) throws ApplicationException {
-        Webcam webcam = Webcam.getDefault();
-        if (webcam == null) {
-            throw new ApplicationException(
-                "Keine Webcam gefunden. Bitte schliessen Sie eine Webcam an."
-            );
-        }
-
-        webcam.setViewSize(WebcamResolution.VGA.getSize());
-
-        AtomicBoolean found = new AtomicBoolean(false);
+        final I18N i = getI18n();
+        final AtomicBoolean found = new AtomicBoolean(false);
         final String[] qrText = {null};
 
-        WebcamPanel panel = new WebcamPanel(webcam);
-        panel.setFPSLimit(2);
-        panel.setMirrored(true);
+        Object grabber;
+        Object converter;
+        try {
+            Class<?> grabberClass = Class.forName("org.bytedeco.javacv.OpenCVFrameGrabber");
+            Class<?> converterClass = Class.forName("org.bytedeco.javacv.Java2DFrameConverter");
+            grabber = grabberClass.getConstructor(int.class).newInstance(0);
+            grabberClass.getMethod("start").invoke(grabber);
+            converter = converterClass.getConstructor().newInstance();
+        } catch (Throwable t) {
+            Throwable cause = t.getCause() != null ? t.getCause() : t;
+            String msg = cause.getMessage() != null ? cause.getMessage() : cause.getClass().getName();
+            JOptionPane.showMessageDialog(null,
+                i.tr("webcam.cannot.start", msg),
+                i.tr("qrcode.scan.title"), JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-        JFrame frame = new JFrame("QR-Code scannen - ESC zum Abbrechen");
+        JFrame frame = new JFrame(i.tr("qrcode.scan.title"));
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setLayout(new BorderLayout());
-        frame.add(panel, BorderLayout.CENTER);
 
-        JLabel status = new JLabel("Halten Sie den QR-Code vor die Webcam...");
+        JLabel imageLabel = new JLabel();
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        frame.add(imageLabel, BorderLayout.CENTER);
+
+        JLabel status = new JLabel(i.tr("qrcode.scan.hold"));
         status.setHorizontalAlignment(SwingConstants.CENTER);
         status.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         frame.add(status, BorderLayout.SOUTH);
 
+        imageLabel.setPreferredSize(new java.awt.Dimension(200, 150));
         frame.pack();
         frame.setLocationRelativeTo(null);
+
+        frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+            .put(KeyStroke.getKeyStroke("ESCAPE"), "cancel");
+        frame.getRootPane().getActionMap().put("cancel", new AbstractAction() {
+            @Override public void actionPerformed(java.awt.event.ActionEvent e) {
+                frame.dispose();
+            }
+        });
+
         frame.setVisible(true);
 
+        final Object grabberRef = grabber;
+        final Object converterRef = converter;
+
         Thread scanThread = new Thread(() -> {
+            Method grabMethod = null;
+            Method convertMethod = null;
+            Method stopMethod = null;
+            Method releaseMethod = null;
+            try {
+                grabMethod = grabberRef.getClass().getMethod("grab");
+                Class<?> frameClass = Class.forName("org.bytedeco.javacv.Frame");
+                convertMethod = converterRef.getClass().getMethod("convert", frameClass);
+                stopMethod = grabberRef.getClass().getMethod("stop");
+                releaseMethod = grabberRef.getClass().getMethod("release");
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    JOptionPane.showMessageDialog(frame,
+                        i.tr("webcam.init.failed", e.getMessage()),
+                        i.tr("qrcode.scan.title"), JOptionPane.ERROR_MESSAGE);
+                    frame.dispose();
+                });
+                return;
+            }
+
+            Method grabRef = grabMethod;
+            Method convertRef = convertMethod;
+            Method stopRef = stopMethod;
+            Method releaseRef = releaseMethod;
+
             Map<DecodeHintType, Object> hints = new HashMap<>();
             hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-            hints.put(DecodeHintType.POSSIBLE_FORMATS,
-                EnumSet.of(BarcodeFormat.QR_CODE));
+            hints.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.of(BarcodeFormat.QR_CODE));
 
-            while (frame.isDisplayable() && !found.get()) {
-                if (!webcam.isOpen()) {
-                    break;
-                }
-
-                BufferedImage image = webcam.getImage();
-                if (image == null) {
-                    continue;
-                }
-
-                try {
-                    LuminanceSource source = new BufferedImageLuminanceSource(image);
-                    BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-                    Result result = new MultiFormatReader().decode(bitmap, hints);
-
-                    if (result != null && result.getText() != null) {
-                        qrText[0] = result.getText();
-                        found.set(true);
-
-                        SwingUtilities.invokeLater(() -> {
-                            status.setText("QR-Code erkannt! Daten werden verarbeitet...");
-                            panel.stop();
-                            frame.dispose();
-                        });
+            try {
+                while (frame.isDisplayable() && !found.get()) {
+                    Object grabbedFrame;
+                    try {
+                        grabbedFrame = grabRef.invoke(grabberRef);
+                    } catch (Exception e) {
+                        try { Thread.sleep(50); } catch (InterruptedException ie) { break; }
+                        continue;
                     }
-                } catch (NotFoundException e) {
-                    // Kein QR-Code gefunden, weitermachen
-                } catch (Exception e) {
-                    // Fehler ignorieren, weitermachen
-                }
 
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+                    if (grabbedFrame == null) {
+                        try { Thread.sleep(50); } catch (InterruptedException ie) { break; }
+                        continue;
+                    }
+
+                    BufferedImage image;
+                    try {
+                        image = (BufferedImage) convertRef.invoke(converterRef, grabbedFrame);
+                    } catch (Exception e) {
+                        try { Thread.sleep(50); } catch (InterruptedException ie) { break; }
+                        continue;
+                    }
+
+                    if (image == null) {
+                        try { Thread.sleep(50); } catch (InterruptedException ie) { break; }
+                        continue;
+                    }
+
+                    BufferedImage displayImage = image;
+                    SwingUtilities.invokeLater(() -> {
+                        imageLabel.setIcon(new ImageIcon(
+                            displayImage.getScaledInstance(200, 150, Image.SCALE_FAST)));
+                    });
+
+                    try {
+                        LuminanceSource source = new BufferedImageLuminanceSource(image);
+                        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+                        Result result = new MultiFormatReader().decode(bitmap, hints);
+
+                        if (result != null && result.getText() != null) {
+                            qrText[0] = result.getText();
+                            found.set(true);
+
+                            SwingUtilities.invokeLater(() -> {
+                                status.setText(i.tr("qrcode.detected"));
+                                frame.dispose();
+                            });
+                        }
+                    } catch (NotFoundException e) {
+                        // Kein QR-Code gefunden
+                    } catch (Exception e) {
+                        // Fehler ignorieren
+                    }
+
+                    try { Thread.sleep(100); } catch (InterruptedException e) { break; }
                 }
+            } finally {
+                try { stopRef.invoke(grabberRef); } catch (Exception e) { /* ignore */ }
+                try { releaseRef.invoke(grabberRef); } catch (Exception e) { /* ignore */ }
             }
 
             if (found.get() && qrText[0] != null) {
@@ -120,12 +194,12 @@ public class QRWebcamAction implements Action {
                         try {
                             GUI.startView(QRCodeView.class, sepaData);
                         } catch (Exception ex) {
-                            GUI.getView().setErrorText("Fehler: " + ex.getMessage());
+                            GUI.getView().setErrorText(i.tr("error.param", ex.getMessage()));
                         }
                     });
                 } catch (ParserException e) {
                     GUI.getDisplay().asyncExec(() -> {
-                        GUI.getView().setErrorText("Fehler: " + e.getMessage());
+                        GUI.getView().setErrorText(i.tr("error.param", e.getMessage()));
                     });
                 }
             }
@@ -145,8 +219,7 @@ public class QRWebcamAction implements Action {
             }
         }
         throw new ParserException(
-            "Kein Parser fuer QR-Code-Format gefunden. " +
-            "Unterstuetzt werden EPC (BCD) und EMV (TLV)."
+            getI18n().tr("error.no.parser")
         );
     }
 }

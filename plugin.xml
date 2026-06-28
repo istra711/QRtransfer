@@ -2,10 +2,10 @@
 <plugin xmlns="http://www.willuhn.de/schema/jameica-plugin"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.willuhn.de/schema/jameica-plugin http://www.willuhn.de/schema/jameica-plugin-1.5.xsd"
-        name="hbci.qrtransfer" version="1.0.0"
+        name="hbci.qrtransfer" version="1.0.2"
         class="de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin">
 
-  <description>SEPA-QR-Code Überweisungs-Plugin für Hibiscus</description>
+  <description>SEPA QR Code transfer plugin for Hibiscus</description>
   <license>GPL</license>
 
   <requires jameica="2.0+" hibiscus="2.0+" />
@@ -16,28 +16,28 @@
   </classfinder>
 
   <menu>
-    <item name="QR-Code">
-      <item name="Aus Zwischenablage" shortcut="CTRL+SHIFT+Q"
+    <item name="navi.qrcode">
+      <item name="navi.clipboard" shortcut="CTRL+SHIFT+Q"
             action="de.willuhn.jameica.hbci.qrtransfer.action.QRCodeAction" />
-      <item name="Aus Datei" shortcut="CTRL+SHIFT+F"
+      <item name="navi.file" shortcut="CTRL+SHIFT+F"
             action="de.willuhn.jameica.hbci.qrtransfer.action.QRFileAction" />
-      <item name="Aus PDF-Datei" shortcut="CTRL+SHIFT+P"
+      <item name="navi.pdf" shortcut="CTRL+SHIFT+P"
             action="de.willuhn.jameica.hbci.qrtransfer.action.QRPdfAction" />
-      <item name="Aus Webcam" shortcut="CTRL+SHIFT+W"
+      <item name="navi.webcam" shortcut="CTRL+SHIFT+W"
             action="de.willuhn.jameica.hbci.qrtransfer.action.QRWebcamAction" />
     </item>
   </menu>
 
   <navigation>
     <item id="hibiscus.navi.sepatransfer">
-      <item name="QR-Code Überweisung" icon-close="qr-icon.png" icon-open="qr-icon.png">
-        <item name="Aus Zwischenablage" icon-close="qr-icon.png" icon-open="qr-icon.png"
+      <item name="navi.transfer" icon-close="qr-icon.png" icon-open="qr-icon.png">
+        <item name="navi.clipboard" icon-close="clipboard-icon.png" icon-open="clipboard-icon.png"
               action="de.willuhn.jameica.hbci.qrtransfer.action.QRCodeAction" />
-        <item name="Aus Datei" icon-close="qr-icon.png" icon-open="qr-icon.png"
+        <item name="navi.imagefile" icon-close="image-icon.png" icon-open="image-icon.png"
               action="de.willuhn.jameica.hbci.qrtransfer.action.QRFileAction" />
-        <item name="Aus PDF-Datei" icon-close="qr-icon.png" icon-open="qr-icon.png"
+        <item name="navi.pdffile" icon-close="pdf-icon.png" icon-open="pdf-icon.png"
               action="de.willuhn.jameica.hbci.qrtransfer.action.QRPdfAction" />
-        <item name="Aus Webcam" icon-close="qr-icon.png" icon-open="qr-icon.png"
+        <item name="navi.webcam" icon-close="webcam-icon.png" icon-open="webcam-icon.png"
               action="de.willuhn.jameica.hbci.qrtransfer.action.QRWebcamAction" />
       </item>
     </item>

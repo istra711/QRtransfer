@@ -1,23 +1,22 @@
 package de.willuhn.jameica.hbci.qrtransfer.parser;
 
 import de.willuhn.jameica.hbci.qrtransfer.model.SepaData;
+import de.willuhn.jameica.system.Application;
+import de.willuhn.util.I18N;
 
-/**
- * Parser für EPC QR-Codes im BCD-Format.
- *
- * Format:
- * BCD
- * 001 oder 002 (Version)
- * 1 oder 2 (1=ohne Betrag, 2=mit Betrag)
- * SCT
- * [BIC]
- * [Empfänger Name]
- * [IBAN]
- * [EUR][Betrag]           (optional)
- * //Betreff               (optional)
- * [Verwendungszweck]      (optional)
- */
 public class EpcParser implements QrCodeParser {
+
+    private static I18N i18n;
+
+    private static synchronized I18N getI18n() {
+        if (i18n == null) {
+            i18n = Application.getPluginLoader()
+                .getPlugin("de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin")
+                .getResources()
+                .getI18N();
+        }
+        return i18n;
+    }
 
     @Override
     public boolean canParse(String text) {
@@ -27,35 +26,32 @@ public class EpcParser implements QrCodeParser {
 
     @Override
     public SepaData parse(String text) throws ParserException {
+        final I18N i = getI18n();
         if (text == null || text.isEmpty()) {
-            throw new ParserException("QR-Code-Text ist leer");
+            throw new ParserException(i.tr("emv.text.empty"));
         }
 
         String[] lines = text.split("\\r?\\n");
-        for (int i = 0; i < lines.length; i++) {
-            lines[i] = lines[i].trim();
+        for (int ii = 0; ii < lines.length; ii++) {
+            lines[ii] = lines[ii].trim();
         }
 
         if (lines.length < 7) {
-            throw new ParserException("EPC QR-Code hat zu wenige Zeilen");
+            throw new ParserException(i.tr("epc.too.few.lines"));
         }
 
         SepaData data = new SepaData();
 
-        // Zeile 3: Service Code
         if (!"SCT".equals(lines[3].trim())) {
-            throw new ParserException("Nicht-SEPA-Überweisung: " + lines[3]);
+            throw new ParserException(i.tr("epc.non.sepa", lines[3]));
         }
 
-        // Zeile 4-6: BIC, Name, IBAN
         data.setBic(getOrNull(lines, 4));
         data.setEmpfaengerName(getOrNull(lines, 5));
         data.setIban(getOrNull(lines, 6));
 
-        // Ab Zeile 7: Betrag, Betreff, Verwendungszweck
         int pos = 7;
 
-        // Zeile 7: Betrag erkennen (z.B. "EUR12.34", "12,34", "12.34")
         if (pos < lines.length) {
             String line7 = lines[pos].trim();
             if (looksLikeAmount(line7)) {
@@ -64,7 +60,6 @@ public class EpcParser implements QrCodeParser {
             }
         }
 
-        // Nächste Zeile: Betreff mit //
         if (pos < lines.length) {
             String next = lines[pos].trim();
             if (next.startsWith("//")) {
@@ -73,7 +68,6 @@ public class EpcParser implements QrCodeParser {
             }
         }
 
-        // Rest: Verwendungszweck
         StringBuilder zweck = new StringBuilder();
         while (pos < lines.length) {
             String line = lines[pos].trim();
@@ -88,30 +82,20 @@ public class EpcParser implements QrCodeParser {
         }
 
         if (!data.isValid()) {
-            throw new ParserException("Unvollständig: IBAN oder Empfänger fehlt");
+            throw new ParserException(i.tr("epc.incomplete"));
         }
 
         return data;
     }
 
-    /**
-     * Erkennt ob eine Zeile wie ein Betrag aussieht.
-     * Akzeptiert: "EUR12.34", "12,34", "12.34", "CHF100", etc.
-     */
     private boolean looksLikeAmount(String line) {
         if (line.isEmpty()) return false;
-        // Entferne optionalen Währungscode am Anfang
         String cleaned = line.replaceAll("^[A-Z]{3}", "").trim();
-        // Muss eine Zahl sein (mit optionalem Komma/Punkt)
         return cleaned.matches("\\d+[.,]?\\d*");
     }
 
-    /**
-     * Parst einen Betrag aus einer Zeile.
-     */
     private String parseBetrag(String line) {
         String cleaned = line.replaceAll("^[A-Z]{3}", "").trim();
-        // Komma durch Punkt ersetzen
         cleaned = cleaned.replace(",", ".");
         return cleaned;
     }

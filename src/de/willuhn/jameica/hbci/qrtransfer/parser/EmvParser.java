@@ -1,13 +1,24 @@
 package de.willuhn.jameica.hbci.qrtransfer.parser;
 
 import de.willuhn.jameica.hbci.qrtransfer.model.SepaData;
+import de.willuhn.jameica.system.Application;
+import de.willuhn.util.I18N;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Parser für EMV QR-Codes im TLV-Format (Tag-Length-Value).
- */
 public class EmvParser implements QrCodeParser {
+
+    private static I18N i18n;
+
+    private static synchronized I18N getI18n() {
+        if (i18n == null) {
+            i18n = Application.getPluginLoader()
+                .getPlugin("de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin")
+                .getResources()
+                .getI18N();
+        }
+        return i18n;
+    }
 
     private static final String SEPA_GUI = "sepa";
 
@@ -19,8 +30,9 @@ public class EmvParser implements QrCodeParser {
 
     @Override
     public SepaData parse(String text) throws ParserException {
+        final I18N i = getI18n();
         if (text == null || text.isEmpty()) {
-            throw new ParserException("QR-Code-Text ist leer");
+            throw new ParserException(i.tr("emv.text.empty"));
         }
 
         SepaData data = new SepaData();
@@ -30,52 +42,45 @@ public class EmvParser implements QrCodeParser {
 
             String format = getValue(parsed, "00");
             if (!"01".equals(format)) {
-                throw new ParserException("Ungültiges EMV-Format: " + format);
+                throw new ParserException(i.tr("emv.invalid.format", format));
             }
 
-            // Tag 26: Merchant Account Information
             String merchantInfo = getValue(parsed, "26");
             if (merchantInfo == null) {
-                throw new ParserException("Keine Merchant Account Information (Tag 26) gefunden");
+                throw new ParserException(i.tr("emv.no.merchant.info"));
             }
 
             Map<String, TlvEntry> subTags = parseSubTlv(merchantInfo);
 
             TlvEntry gui = subTags.get("00");
             if (gui == null || !SEPA_GUI.equalsIgnoreCase(gui.value)) {
-                throw new ParserException("Kein SEPA-QR-Code (GUI: " +
-                    (gui != null ? gui.value : "fehlt") + ")");
+                throw new ParserException(i.tr("emv.not.sepa",
+                    gui != null ? gui.value : "fehlt"));
             }
 
-            // Sub-Tag 01: IBAN
             TlvEntry iban = subTags.get("01");
             if (iban == null) {
-                throw new ParserException("IBAN fehlt");
+                throw new ParserException(i.tr("emv.iban.missing"));
             }
             data.setIban(iban.value);
 
-            // Sub-Tag 02: BIC (optional)
             TlvEntry bic = subTags.get("02");
             if (bic != null) {
                 data.setBic(bic.value);
             }
 
-            // Sub-Tag 04: Empfänger Name
             TlvEntry empfaengerName = subTags.get("04");
 
-            // Tag 53: Währung
             String waehrung = getValue(parsed, "53");
             if (waehrung != null) {
                 data.setWaehrung(convertCurrency(waehrung));
             }
 
-            // Tag 54: Betrag
             String betrag = getValue(parsed, "54");
             if (betrag != null) {
                 data.setBetrag(betrag);
             }
 
-            // Tag 59: Empfänger Name (Fallback)
             if (empfaengerName != null) {
                 data.setEmpfaengerName(empfaengerName.value);
             } else {
@@ -85,23 +90,18 @@ public class EmvParser implements QrCodeParser {
                 }
             }
 
-            // Tag 60: Empfänger Ort
             String ort = getValue(parsed, "60");
             if (ort != null) {
                 data.setEmpfaengerOrt(ort);
             }
 
-            // Tag 62: Additional Data (Verwendungszweck)
             String additionalData = getValue(parsed, "62");
             if (additionalData != null) {
                 Map<String, TlvEntry> additionalSubTags = parseSubTlv(additionalData);
-                // Sub-Tag 01: Reference Type
-                // Sub-Tag 02: Reference Number (Verwendungszweck)
                 TlvEntry refNumber = additionalSubTags.get("02");
                 if (refNumber != null) {
                     data.setVerwendungszweck(refNumber.value);
                 }
-                // Sub-Tag 03: Additional Data (Betreff)
                 TlvEntry additionalRef = additionalSubTags.get("03");
                 if (additionalRef != null) {
                     data.setBetreff(additionalRef.value);
@@ -109,13 +109,13 @@ public class EmvParser implements QrCodeParser {
             }
 
             if (!data.isValid()) {
-                throw new ParserException("Unvollständige SEPA-Daten: IBAN oder Empfänger fehlt");
+                throw new ParserException(i.tr("emv.incomplete.data"));
             }
 
         } catch (ParserException e) {
             throw e;
         } catch (Exception e) {
-            throw new ParserException("Fehler beim Parsen: " + e.getMessage(), e);
+            throw new ParserException(i.tr("emv.parse.error", e.getMessage()), e);
         }
 
         return data;
@@ -124,7 +124,6 @@ public class EmvParser implements QrCodeParser {
     private Map<String, java.util.List<TlvEntry>> parseTlv(String payload) {
         Map<String, java.util.List<TlvEntry>> result = new LinkedHashMap<>();
         int pos = 0;
-
         while (pos + 4 <= payload.length()) {
             String tag = payload.substring(pos, pos + 2);
             String lengthStr = payload.substring(pos + 2, pos + 4);
@@ -134,25 +133,18 @@ public class EmvParser implements QrCodeParser {
             } catch (NumberFormatException e) {
                 break;
             }
-
-            if (pos + 4 + length > payload.length()) {
-                break;
-            }
-
+            if (pos + 4 + length > payload.length()) break;
             String value = payload.substring(pos + 4, pos + 4 + length);
             pos += 4 + length;
-
             result.computeIfAbsent(tag, k -> new java.util.ArrayList<>())
                   .add(new TlvEntry(tag, value, length));
         }
-
         return result;
     }
 
     private Map<String, TlvEntry> parseSubTlv(String containerValue) {
         Map<String, TlvEntry> result = new LinkedHashMap<>();
         int pos = 0;
-
         while (pos + 4 <= containerValue.length()) {
             String subTag = containerValue.substring(pos, pos + 2);
             String lengthStr = containerValue.substring(pos + 2, pos + 4);
@@ -162,17 +154,11 @@ public class EmvParser implements QrCodeParser {
             } catch (NumberFormatException e) {
                 break;
             }
-
-            if (pos + 4 + length > containerValue.length()) {
-                break;
-            }
-
+            if (pos + 4 + length > containerValue.length()) break;
             String value = containerValue.substring(pos + 4, pos + 4 + length);
             pos += 4 + length;
-
             result.put(subTag, new TlvEntry(subTag, value, length));
         }
-
         return result;
     }
 
@@ -196,7 +182,6 @@ public class EmvParser implements QrCodeParser {
         final String tag;
         final String value;
         final int length;
-
         TlvEntry(String tag, String value, int length) {
             this.tag = tag;
             this.value = value;

@@ -10,10 +10,11 @@ From the first idea to the final implementation including the GitHub repository 
 
 The project demonstrates that modern AI assistants can handle complex, multi-step software engineering tasks autonomously, including:
 - Understanding domain-specific frameworks (Jameica/Hibiscus)
-- Implementing multiple input methods (clipboard, file, PDF)
-- Working with external libraries (ZXing, Apache PDFBox)
+- Implementing multiple input methods (clipboard, file, PDF, webcam)
+- Working with external libraries (ZXing, Apache PDFBox, JavaCV/OpenCV)
 - Debugging and fixing integration issues
 - Setting up build systems (Apache Ant)
+- Implementing internationalization (i18n) with dynamic locale switching
 - Managing Git repositories and publishing to GitHub
 
 The result exceeded expectations and shows that AI can serve as a capable "co-developer" for real-world applications.
@@ -27,11 +28,11 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 
 ## Features
 
-- **Three input methods:**
+- **Four input methods:**
   - **Clipboard** - Copy a QR code image and paste it directly
   - **Image file** - Open PNG, JPG, or BMP files containing a QR code
   - **PDF invoice** - Extract QR codes directly from PDF documents
-  - **Webcam** - Scan QR codes directly from your webcam in real-time
+  - **Webcam** - Scan QR codes in real-time using your webcam (JavaCV/OpenCV)
 
 - **Supported QR code formats:**
   - **EPC (BCD)** - The standard European Payment Council format used on invoices
@@ -44,20 +45,28 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
   - Payment reference / purpose
 
 - **Seamless Hibiscus integration:**
-  - Adds a "QR-Code Ueberweisung" submenu under Zahlungsverkehr in the navigation tree
+  - Adds a "QR Code Transfer" submenu under Zahlungsverkehr in the navigation tree
   - Creates a pre-filled transfer draft ready for review and sending
   - Supports both domestic (German) and international SEPA transfers
+
+- **Internationalization (i18n):**
+  - Full English and German language support
+  - Automatically switches based on Jameica locale settings
+  - All UI text, error messages, and navigation items are translated
+
+- **Navigation icons:**
+  - Custom icons for each navigation entry (clipboard, image, PDF, webcam)
 
 ## Screenshots
 
 ### Plugin installed in Jameica
 ![Jameica with QRtransfer plugin](img/JH1.png)
 
-### Navigation tree with QR-Code submenu
+### Navigation tree with QR Code Transfer submenu
 ![Navigation tree](img/JH3.png)
 
-### QR-Code menu with keyboard shortcuts
-![QR-Code menu](img/JH4.png)
+### QR Code menu with keyboard shortcuts
+![QR Code menu](img/JH4.png)
 
 ### Parsed SEPA data from QR code
 ![SEPA data preview](img/JH2.png)
@@ -67,7 +76,7 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 1. Download the latest release from the [Releases](https://github.com/istra711/QRtransfer/releases) page
 2. Open Jameica
 3. Go to **Datei > Plugins online suchen... > Plugin manuell installieren...**
-4. Select `hbci.qrtransfer-1.0.0.zip`
+4. Select `hbci.qrtransfer-1.0.2.zip`
 5. Restart Jameica
 
 ### Manual Build
@@ -76,7 +85,7 @@ If you prefer to build from source:
 
 ```bash
 # Requirements
-# - JDK 8 or higher
+# - JDK 17 or higher
 # - Apache Ant
 
 # Set JAVA_HOME (adjust path as needed)
@@ -90,14 +99,14 @@ ant dist
 
 ## Usage
 
-1. In Hibiscus, navigate to **Zahlungsverkehr > QR-Code Ueberweisung**
+1. In Hibiscus, navigate to **Zahlungsverkehr > QR Code Transfer**
 2. Choose one of the four input methods:
-   - **Aus Zwischenablage** - Reads QR code from clipboard
-   - **Aus Datei** - Opens a file dialog for image files
-   - **Aus PDF-Datei** - Opens a file dialog for PDF invoices
-   - **Aus Webcam** - Opens webcam preview for real-time scanning
+   - **Clipboard** - Reads QR code from clipboard
+   - **Image File** - Opens a file dialog for image files
+   - **PDF File** - Opens a file dialog for PDF invoices
+   - **Webcam** - Opens webcam preview for real-time scanning
 3. The plugin displays all extracted SEPA data
-4. Click **Ueberweisung anlegen** to create a transfer draft in Hibiscus
+4. Click **Create Transfer** to create a transfer draft in Hibiscus
 5. Review the data and send the transfer
 
 ### Keyboard Shortcuts
@@ -134,11 +143,10 @@ src/de/willuhn/jameica/hbci/qrtransfer/
 │   ├── QRCodeAction.java          # Read QR from clipboard
 │   ├── QRFileAction.java          # Read QR from image file
 │   ├── QRPdfAction.java           # Read QR from PDF
-│   └── QRWebcamAction.java        # Read QR from webcam
+│   └── QRWebcamAction.java        # Read QR from webcam (JavaCV/OpenCV)
 ├── gui/
 │   ├── QRCodeView.java            # Preview and create transfer
-│   ├── WelcomeAction.java         # Navigation action
-│   └── WelcomeView.java           # Landing page
+│   └── WelcomeView.java           # Landing page with action buttons
 ├── model/
 │   └── SepaData.java              # SEPA data model
 └── parser/
@@ -146,6 +154,10 @@ src/de/willuhn/jameica/hbci/qrtransfer/
     ├── EpcParser.java             # EPC (BCD) format parser
     ├── EmvParser.java             # EMV (TLV) format parser
     └── ParserException.java       # Parser errors
+
+src/lang/
+├── hbci_qrtransfer_messages_en.properties      # English translations
+└── hbci_qrtransfer_messages_de_DE.properties   # German translations
 ```
 
 ### Dependencies
@@ -154,8 +166,32 @@ src/de/willuhn/jameica/hbci/qrtransfer/
 - **Hibiscus** 2.0+ - Online banking plugin
 - **ZXing** 3.5.3 - QR code decoding library
 - **Apache PDFBox** 3.0.3 - PDF rendering (for PDF QR extraction)
-- **webcam-capture** 0.3.12 - Webcam access for real-time QR scanning
+- **JavaCV** 1.5.9 - Java wrapper for OpenCV (webcam access)
+- **OpenCV** 4.7.0 - Computer vision library for webcam frame capture
 - **SWT** - Standard Jameica GUI toolkit
+
+### i18n Design
+
+The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys (no spaces in keys) to avoid Java Properties parsing issues. Navigation and menu items in `plugin.xml` use i18n keys that Jameica automatically resolves via `AbstractItemXml.getName()`.
+
+## Version History
+
+### v1.0.2
+- Fixed i18n: replaced German-text keys with simple ASCII keys (spaces in `.properties` keys caused silent parsing failures)
+- Added full i18n support for navigation menu and top menu items
+- Navigation and menu text now dynamically switches between English and German based on Jameica locale
+- Updated dependencies: replaced `webcam-capture` with JavaCV/OpenCV for webcam support
+- Added custom navigation icons (clipboard, image, PDF, webcam)
+
+### v1.0.1
+- Added webcam QR code scanning via JavaCV/OpenCV
+- Added navigation icons
+- Added keyboard shortcuts
+
+### v1.0.0
+- Initial release with clipboard, file, and PDF input methods
+- EPC (BCD) and EMV (TLV) parser support
+- Hibiscus transfer draft creation
 
 ## License
 

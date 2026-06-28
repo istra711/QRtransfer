@@ -10,88 +10,96 @@ import de.willuhn.jameica.gui.util.LabelGroup;
 import de.willuhn.jameica.hbci.Settings;
 import de.willuhn.jameica.hbci.qrtransfer.model.SepaData;
 import de.willuhn.jameica.hbci.rmi.AuslandsUeberweisung;
+import de.willuhn.jameica.system.Application;
 import de.willuhn.util.ApplicationException;
+import de.willuhn.util.I18N;
 
 import java.util.Date;
 
 public class QRCodeView extends AbstractView {
 
+    private static I18N i18n;
+
+    private static synchronized I18N getI18n() {
+        if (i18n == null) {
+            i18n = Application.getPluginLoader()
+                .getPlugin("de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin")
+                .getResources()
+                .getI18N();
+        }
+        return i18n;
+    }
+
     private SepaData sepaData;
 
     @Override
     public void bind() throws Exception {
+        final I18N i = getI18n();
         this.sepaData = (SepaData) getCurrentObject();
 
         if (sepaData == null) {
-            new Headline(getParent(), "Fehler");
+            new Headline(getParent(), i.tr("error"));
             return;
         }
 
-        GUI.getView().setTitle("SEPA-QR-Code Überweisung");
+        GUI.getView().setTitle(i.tr("sepa.qrtransfer.title"));
 
         SimpleContainer container = new SimpleContainer(getParent());
-        container.addHeadline("QR-Code-Daten erfolgreich gelesen");
+        container.addHeadline(i.tr("qrcode.data.read.success"));
 
-        // Format-Anzeige
-        LabelGroup formatGroup = new LabelGroup(container.getComposite(), "Erkanntes Format");
-        String format = sepaData.getFormat() != null ? sepaData.getFormat() : "Unbekannt";
-        formatGroup.addLabelPair("Format", new de.willuhn.jameica.gui.input.TextInput(format));
+        LabelGroup formatGroup = new LabelGroup(container.getComposite(), i.tr("recognized.format"));
+        String format = sepaData.getFormat() != null ? sepaData.getFormat() : i.tr("unknown");
+        formatGroup.addLabelPair(i.tr("format"), new de.willuhn.jameica.gui.input.TextInput(format));
 
-        // Empfänger-Konto
-        LabelGroup ibanGroup = new LabelGroup(container.getComposite(), "Empfänger-Konto");
+        LabelGroup ibanGroup = new LabelGroup(container.getComposite(), i.tr("recipient.account"));
         ibanGroup.addLabelPair("IBAN", new de.willuhn.jameica.gui.input.TextInput(
             sepaData.getIban() != null ? sepaData.getIban() : ""));
         ibanGroup.addLabelPair("BIC", new de.willuhn.jameica.gui.input.TextInput(
             sepaData.getBic() != null ? sepaData.getBic() : ""));
 
-        // Empfänger
-        LabelGroup empfaengerGroup = new LabelGroup(container.getComposite(), "Empfänger");
-        empfaengerGroup.addLabelPair("Name", new de.willuhn.jameica.gui.input.TextInput(
+        LabelGroup empfaengerGroup = new LabelGroup(container.getComposite(), i.tr("recipient"));
+        empfaengerGroup.addLabelPair(i.tr("name"), new de.willuhn.jameica.gui.input.TextInput(
             sepaData.getEmpfaengerName() != null ? sepaData.getEmpfaengerName() : ""));
-        empfaengerGroup.addLabelPair("Ort", new de.willuhn.jameica.gui.input.TextInput(
+        empfaengerGroup.addLabelPair(i.tr("city"), new de.willuhn.jameica.gui.input.TextInput(
             sepaData.getEmpfaengerOrt() != null ? sepaData.getEmpfaengerOrt() : ""));
 
-        // Betrag
-        LabelGroup betragGroup = new LabelGroup(container.getComposite(), "Betrag");
+        LabelGroup betragGroup = new LabelGroup(container.getComposite(), i.tr("amount"));
         String betragStr = "";
         if (sepaData.getBetrag() > 0) {
             betragStr = String.format(java.util.Locale.GERMAN, "%.2f", sepaData.getBetrag());
         }
-        betragGroup.addLabelPair("Betrag", new de.willuhn.jameica.gui.input.TextInput(betragStr));
-        betragGroup.addLabelPair("Währung", new de.willuhn.jameica.gui.input.TextInput(
+        betragGroup.addLabelPair(i.tr("amount"), new de.willuhn.jameica.gui.input.TextInput(betragStr));
+        betragGroup.addLabelPair(i.tr("currency"), new de.willuhn.jameica.gui.input.TextInput(
             sepaData.getWaehrung() != null ? sepaData.getWaehrung() : "EUR"));
 
-        // Verwendungszweck - beide Felder anzeigen
-        LabelGroup zweckGroup = new LabelGroup(container.getComposite(), "Verwendungszweck");
+        LabelGroup zweckGroup = new LabelGroup(container.getComposite(), i.tr("purpose"));
         String verwendungszweck = sepaData.getVerwendungszweck();
         String betreff = sepaData.getBetreff();
 
         if (verwendungszweck != null && !verwendungszweck.isEmpty()) {
-            zweckGroup.addLabelPair("Verwendungszweck", new de.willuhn.jameica.gui.input.TextInput(verwendungszweck));
+            zweckGroup.addLabelPair(i.tr("purpose"), new de.willuhn.jameica.gui.input.TextInput(verwendungszweck));
         }
         if (betreff != null && !betreff.isEmpty()) {
-            zweckGroup.addLabelPair("Betreff", new de.willuhn.jameica.gui.input.TextInput(betreff));
+            zweckGroup.addLabelPair(i.tr("subject"), new de.willuhn.jameica.gui.input.TextInput(betreff));
         }
         if ((verwendungszweck == null || verwendungszweck.isEmpty()) &&
             (betreff == null || betreff.isEmpty())) {
-            zweckGroup.addLabelPair("Verwendungszweck", new de.willuhn.jameica.gui.input.TextInput("(keiner)"));
+            zweckGroup.addLabelPair(i.tr("purpose"), new de.willuhn.jameica.gui.input.TextInput(i.tr("none")));
         }
 
-        // QR-Code Rohdaten
         String rawText = sepaData.getRawText();
         if (rawText != null && !rawText.isEmpty()) {
-            LabelGroup rawGroup = new LabelGroup(container.getComposite(), "QR-Code Rohdaten");
-            rawGroup.addLabelPair("Inhalt", new de.willuhn.jameica.gui.input.TextInput(rawText));
+            LabelGroup rawGroup = new LabelGroup(container.getComposite(), i.tr("qrcode.rawdata"));
+            rawGroup.addLabelPair(i.tr("content"), new de.willuhn.jameica.gui.input.TextInput(rawText));
         }
 
-        // Überweisung anlegen Button
-        new Button("Überweisung anlegen", new Action() {
+        new Button(i.tr("create.transfer"), new Action() {
             @Override
             public void handleAction(Object context) throws ApplicationException {
                 try {
                     createTransfer(sepaData);
                 } catch (Exception e) {
-                    throw new ApplicationException("Fehler: " + e.getMessage(), e);
+                    throw new ApplicationException(i.tr("error.param", e.getMessage()), e);
                 }
             }
         }, null, true).paint(container.getComposite());
@@ -99,7 +107,7 @@ public class QRCodeView extends AbstractView {
 
     private void createTransfer(SepaData data) throws Exception {
         if (data == null || !data.isValid()) {
-            throw new ApplicationException("Die SEPA-Daten sind unvollständig");
+            throw new ApplicationException(getI18n().tr("sepa.data.incomplete"));
         }
 
         AuslandsUeberweisung u = (AuslandsUeberweisung) Settings.getDBService()

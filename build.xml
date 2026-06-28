@@ -10,7 +10,7 @@
     <property name="build.stubs" value="${build.dir}/stubs"/>
     <property name="dist.dir" value="dist"/>
     <property name="plugin.name" value="hbci.qrtransfer"/>
-    <property name="plugin.version" value="1.0.0"/>
+    <property name="plugin.version" value="1.0.2"/>
     <property name="jameica.home" value="C:/Programme/Jameica"/>
 
     <!-- Classpath -->
@@ -46,10 +46,15 @@
 
     <!-- Create JAR -->
     <target name="jar" depends="compile">
-        <jar destfile="${dist.dir}/${plugin.name}.jar" basedir="${build.classes}">
-            <manifest>
-                <attribute name="Built-By" value="QR-Transfer Plugin"/>
-            </manifest>
+        <mkdir dir="${build.dir}/lang"/>
+        <copy todir="${build.dir}/lang">
+            <fileset dir="src/lang">
+                <include name="**/*.properties"/>
+            </fileset>
+        </copy>
+        <jar destfile="${dist.dir}/${plugin.name}.jar">
+            <fileset dir="${build.classes}"/>
+            <fileset dir="${build.dir}"/>
         </jar>
     </target>
 
@@ -68,6 +73,11 @@
         <copy todir="${dist.dir}/${plugin.name}/img">
             <fileset dir="img">
                 <include name="**/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${dist.dir}/${plugin.name}/img">
+            <fileset dir="bilder">
+                <include name="*-icon.png"/>
             </fileset>
         </copy>
     </target>

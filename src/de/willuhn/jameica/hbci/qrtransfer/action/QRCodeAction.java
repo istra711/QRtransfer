@@ -8,7 +8,9 @@ import de.willuhn.jameica.hbci.qrtransfer.parser.EmvParser;
 import de.willuhn.jameica.hbci.qrtransfer.parser.EpcParser;
 import de.willuhn.jameica.hbci.qrtransfer.parser.ParserException;
 import de.willuhn.jameica.hbci.qrtransfer.parser.QrCodeParser;
+import de.willuhn.jameica.system.Application;
 import de.willuhn.util.ApplicationException;
+import de.willuhn.util.I18N;
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
@@ -22,12 +24,19 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Aktion zum Lesen eines QR-Codes aus der Zwischenablage.
- * Der QR-Code wird dekodiert, die SEPA-Daten geparst
- * und eine Überweisung als Entwurf angelegt.
- */
 public class QRCodeAction implements Action {
+
+    private static I18N i18n;
+
+    private static synchronized I18N getI18n() {
+        if (i18n == null) {
+            i18n = Application.getPluginLoader()
+                .getPlugin("de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin")
+                .getResources()
+                .getI18N();
+        }
+        return i18n;
+    }
 
     private final QrCodeParser[] parsers = {
         new EpcParser(),
@@ -36,58 +45,44 @@ public class QRCodeAction implements Action {
 
     @Override
     public void handleAction(Object context) throws ApplicationException {
+        final I18N i = getI18n();
         try {
-            // 1. Bild aus Zwischenablage lesen
             BufferedImage image = getImageFromClipboard();
             if (image == null) {
                 throw new ApplicationException(
-                    "Kein Bild in der Zwischenablage gefunden. " +
-                    "Bitte einen QR-Code kopieren (z.B. aus einem PDF oder Screenshot)."
+                    i.tr("error.no.image.clipboard")
                 );
             }
 
-            // 2. QR-Code dekodieren
             String qrText = decodeQRCode(image);
             if (qrText == null || qrText.isEmpty()) {
                 throw new ApplicationException(
-                    "Kein QR-Code im Bild erkannt. " +
-                    "Bitte stellen Sie sicher, dass das Bild einen gültigen QR-Code enthält."
+                    i.tr("error.no.qrcode.image")
                 );
             }
 
-            // 3. SEPA-Daten parsen
             SepaData sepaData = parseQrText(qrText);
-
-            // 4. GUI-Ansicht öffnen
             GUI.startView(QRCodeView.class, sepaData);
 
         } catch (ApplicationException e) {
             throw e;
         } catch (Exception e) {
             throw new ApplicationException(
-                "Fehler beim Lesen des QR-Codes: " + e.getMessage(), e
+                i.tr("error.reading.qrcode", e.getMessage()), e
             );
         }
     }
 
-    /**
-     * Liest ein Bild aus der Systemzwischenablage.
-     */
     private BufferedImage getImageFromClipboard() {
         try {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             Transferable content = clipboard.getContents(null);
+            if (content == null) return null;
 
-            if (content == null) {
-                return null;
-            }
-
-            // Versuche Java-Image
             if (content.isDataFlavorSupported(DataFlavor.imageFlavor)) {
                 return (BufferedImage) content.getTransferData(DataFlavor.imageFlavor);
             }
 
-            // Fallback: Versuche Dateiliste (z.B. bei Screenshots)
             if (content.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
                 @SuppressWarnings("unchecked")
                 java.util.List<java.io.File> files =
@@ -96,25 +91,18 @@ public class QRCodeAction implements Action {
                     return javax.imageio.ImageIO.read(files.get(0));
                 }
             }
-
             return null;
         } catch (Exception e) {
             return null;
         }
     }
 
-    /**
-     * Dekodiert einen QR-Code aus einem BufferedImage.
-     */
     private String decodeQRCode(BufferedImage image) throws Exception {
         LuminanceSource source = new BufferedImageLuminanceSource(image);
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
         Map<DecodeHintType, Object> hints = new HashMap<>();
         hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS,
-            EnumSet.of(BarcodeFormat.QR_CODE));
-
+        hints.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.of(BarcodeFormat.QR_CODE));
         try {
             Result result = new MultiFormatReader().decode(bitmap, hints);
             return result.getText();
@@ -123,9 +111,6 @@ public class QRCodeAction implements Action {
         }
     }
 
-    /**
-     * Parst den QR-Code-Text mit dem passenden Parser.
-     */
     private SepaData parseQrText(String qrText) throws ParserException {
         for (QrCodeParser parser : parsers) {
             if (parser.canParse(qrText)) {
@@ -136,8 +121,7 @@ public class QRCodeAction implements Action {
             }
         }
         throw new ParserException(
-            "Kein Parser für QR-Code-Format gefunden. " +
-            "Unterstützt werden EPC (BCD) und EMV (TLV)."
+            getI18n().tr("error.no.parser")
         );
     }
 }
