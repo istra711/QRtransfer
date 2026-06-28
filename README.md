@@ -31,6 +31,7 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
   - **Clipboard** - Copy a QR code image and paste it directly
   - **Image file** - Open PNG, JPG, or BMP files containing a QR code
   - **PDF invoice** - Extract QR codes directly from PDF documents
+  - **Webcam** - Scan QR codes directly from your webcam in real-time
 
 - **Supported QR code formats:**
   - **EPC (BCD)** - The standard European Payment Council format used on invoices
@@ -90,10 +91,11 @@ ant dist
 ## Usage
 
 1. In Hibiscus, navigate to **Zahlungsverkehr > QR-Code Ueberweisung**
-2. Choose one of the three input methods:
+2. Choose one of the four input methods:
    - **Aus Zwischenablage** - Reads QR code from clipboard
    - **Aus Datei** - Opens a file dialog for image files
    - **Aus PDF-Datei** - Opens a file dialog for PDF invoices
+   - **Aus Webcam** - Opens webcam preview for real-time scanning
 3. The plugin displays all extracted SEPA data
 4. Click **Ueberweisung anlegen** to create a transfer draft in Hibiscus
 5. Review the data and send the transfer
@@ -105,6 +107,7 @@ ant dist
 | QR from clipboard | `Ctrl+Shift+Q` |
 | QR from image file | `Ctrl+Shift+F` |
 | QR from PDF | `Ctrl+Shift+P` |
+| QR from webcam | `Ctrl+Shift+W` |
 
 ## Example EPC QR Code
 
@@ -130,7 +133,8 @@ src/de/willuhn/jameica/hbci/qrtransfer/
 ├── action/
 │   ├── QRCodeAction.java          # Read QR from clipboard
 │   ├── QRFileAction.java          # Read QR from image file
-│   └── QRPdfAction.java           # Read QR from PDF
+│   ├── QRPdfAction.java           # Read QR from PDF
+│   └── QRWebcamAction.java        # Read QR from webcam
 ├── gui/
 │   ├── QRCodeView.java            # Preview and create transfer
 │   ├── WelcomeAction.java         # Navigation action
@@ -150,6 +154,7 @@ src/de/willuhn/jameica/hbci/qrtransfer/
 - **Hibiscus** 2.0+ - Online banking plugin
 - **ZXing** 3.5.3 - QR code decoding library
 - **Apache PDFBox** 3.0.3 - PDF rendering (for PDF QR extraction)
+- **webcam-capture** 0.3.12 - Webcam access for real-time QR scanning
 - **SWT** - Standard Jameica GUI toolkit
 
 ## License

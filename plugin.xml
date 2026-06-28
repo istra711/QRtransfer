@@ -23,6 +23,8 @@
             action="de.willuhn.jameica.hbci.qrtransfer.action.QRFileAction" />
       <item name="Aus PDF-Datei" shortcut="CTRL+SHIFT+P"
             action="de.willuhn.jameica.hbci.qrtransfer.action.QRPdfAction" />
+      <item name="Aus Webcam" shortcut="CTRL+SHIFT+W"
+            action="de.willuhn.jameica.hbci.qrtransfer.action.QRWebcamAction" />
     </item>
   </menu>
 
@@ -35,6 +37,8 @@
               action="de.willuhn.jameica.hbci.qrtransfer.action.QRFileAction" />
         <item name="Aus PDF-Datei" icon-close="qr-icon.png" icon-open="qr-icon.png"
               action="de.willuhn.jameica.hbci.qrtransfer.action.QRPdfAction" />
+        <item name="Aus Webcam" icon-close="qr-icon.png" icon-open="qr-icon.png"
+              action="de.willuhn.jameica.hbci.qrtransfer.action.QRWebcamAction" />
       </item>
     </item>
   </navigation>
