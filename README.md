@@ -6,7 +6,7 @@ A Jameica plugin that reads SEPA payment QR codes and creates transfer drafts in
 
 This plugin is the result of a **feasibility study** to test the capabilities of current AI systems. The entire development - from the initial concept to the final upload on GitHub - was carried out entirely by AI. **The human author did not write a single line of code.**
 
-From the first idea to the final implementation including the GitHub repository setup, **the entire project took only a few hours**. Remarkably, even the very first pre-alpha version was already functional - proving that AI can deliver working code on the first attempt, not just prototypes.
+From the first idea to the final implementation including the GitHub repository setup, **the entire project took only a few hours**. The first version was already functional - proving that AI can deliver working code quickly. However, **human testing was essential** to uncover issues that the AI could not anticipate, such as the webcam crashing Jameica and i18n translations silently failing due to Java Properties parsing quirks.
 
 The project demonstrates that modern AI assistants can handle complex, multi-step software engineering tasks autonomously, including:
 - Understanding domain-specific frameworks (Jameica/Hibiscus)
