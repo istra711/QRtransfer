@@ -178,6 +178,12 @@ The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys
 
 ## Version History
 
+### v1.0.6
+- Rewrote webcam to use VideoCapture instead of OpenCVFrameGrabber (better Linux V4L2 support)
+
+### v1.0.5
+- Added webcam device selection dialog for systems with multiple cameras
+
 ### v1.0.4
 - Fixed crash: `setInstantPayment()` now uses reflection for compatibility with Hibiscus 2.10.4 and earlier
 
