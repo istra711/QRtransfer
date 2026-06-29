@@ -1,6 +1,6 @@
 # SEPA QR-Transfer Plugin for Jameica/Hibiscus
 
-A Jameica plugin that reads SEPA payment QR codes and creates transfer drafts in the Hibiscus online banking application.
+A [Jameica](https://www.willuhn.de/products/jameica/) plugin that reads SEPA payment QR codes and creates transfer drafts in the [Hibiscus](https://www.willuhn.de/products/hibiscus/) online banking application.
 
 ## About This Project - AI Feasibility Study
 
@@ -164,8 +164,8 @@ src/lang/
 
 ### Dependencies
 
-- **Jameica** 2.0+ - Plugin framework
-- **Hibiscus** 2.0+ - Online banking plugin
+- **[Jameica](https://www.willuhn.de/products/jameica/)** 2.0+ - Plugin framework
+- **[Hibiscus](https://www.willuhn.de/products/hibiscus/)** 2.0+ - Online banking plugin
 - **ZXing** 3.5.3 - QR code decoding library
 - **Apache PDFBox** 3.0.3 - PDF rendering (for PDF QR extraction)
 - **JavaCV** 1.5.9 - Java wrapper for OpenCV (webcam access)
