@@ -131,7 +131,12 @@ public class QRCodeView extends AbstractView {
         u.setTermin(new Date());
 
         if (u.isNewObject()) {
-            u.setInstantPayment(true);
+            try {
+                java.lang.reflect.Method m = u.getClass().getMethod("setInstantPayment", boolean.class);
+                m.invoke(u, true);
+            } catch (NoSuchMethodException e) {
+                // Hibiscus 2.10.4 oder früher: setInstantPayment nicht vorhanden
+            }
         }
 
         GUI.startView(de.willuhn.jameica.hbci.gui.views.AuslandsUeberweisungNew.class, u);

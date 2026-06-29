@@ -178,6 +178,12 @@ The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys
 
 ## Version History
 
+### v1.0.4
+- Fixed crash: `setInstantPayment()` now uses reflection for compatibility with Hibiscus 2.10.4 and earlier
+
+### v1.0.3
+- Cross-platform support: separate ZIP files for Windows, Linux, and macOS
+
 ### v1.0.2
 - Fixed i18n: replaced German-text keys with simple ASCII keys (spaces in `.properties` keys caused silent parsing failures)
 - Added full i18n support for navigation menu and top menu items
