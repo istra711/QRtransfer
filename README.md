@@ -22,8 +22,8 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 ### Development Environment
 
 - **AI Assistant:** [OpenCode](https://opencode.ai) using the `mimo/mimo-v2-free` model
-- **Operating System:** Windows
-- **Human Role:** Project owner and tester - provided requirements, tested the plugin in Jameica, reported bugs, and guided the development through natural language conversation
+- **Operating System:** Windows (development), Linux (testing)
+- **Human Role:** Project owner and tester - provided requirements, tested the plugin in Jameica on Windows and Linux, reported bugs, and guided the development through natural language conversation
 - **AI Role:** Full-stack developer - wrote all Java code, XML configuration, build scripts, managed dependencies, and handled Git/GitHub operations
 
 ## Features
@@ -57,6 +57,11 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 - **Navigation icons:**
   - Custom icons for each navigation entry (clipboard, image, PDF, webcam)
 
+- **Platform support:**
+  - Windows (tested)
+  - Linux (tested)
+  - macOS (not yet tested)
+
 ## Screenshots
 
 ### Plugin installed in Jameica
@@ -74,9 +79,10 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 ## Installation
 
 1. Download the latest release from the [Releases](https://github.com/istra711/QRtransfer/releases) page
+   - Choose the correct ZIP for your platform: `windows`, `linux`, or `macos`
 2. Open Jameica
 3. Go to **Datei > Plugins online suchen... > Plugin manuell installieren...**
-4. Select `hbci.qrtransfer-1.0.2.zip`
+4. Select the downloaded ZIP file
 5. Restart Jameica
 
 ### Manual Build
