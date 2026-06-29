@@ -120,6 +120,8 @@ ant dist
 
 ## Example EPC QR Code
 
+![Example EPC QR Code](img/example-epc-qrcode.png)
+
 ```
 BCD
 001
