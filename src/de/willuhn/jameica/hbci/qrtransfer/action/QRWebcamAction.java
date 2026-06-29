@@ -50,12 +50,17 @@ public class QRWebcamAction implements Action {
         final AtomicBoolean found = new AtomicBoolean(false);
         final String[] qrText = {null};
 
+        int deviceIndex = selectDevice(i);
+        if (deviceIndex < 0) {
+            return;
+        }
+
         Object grabber;
         Object converter;
         try {
             Class<?> grabberClass = Class.forName("org.bytedeco.javacv.OpenCVFrameGrabber");
             Class<?> converterClass = Class.forName("org.bytedeco.javacv.Java2DFrameConverter");
-            grabber = grabberClass.getConstructor(int.class).newInstance(0);
+            grabber = grabberClass.getConstructor(int.class).newInstance(deviceIndex);
             grabberClass.getMethod("start").invoke(grabber);
             converter = converterClass.getConstructor().newInstance();
         } catch (Throwable t) {
@@ -207,6 +212,44 @@ public class QRWebcamAction implements Action {
 
         scanThread.setDaemon(true);
         scanThread.start();
+    }
+
+    private int selectDevice(I18N i18n) {
+        try {
+            Class<?> grabberClass = Class.forName("org.bytedeco.javacv.FrameGrabber");
+            Method listMethod = grabberClass.getMethod("getDeviceDescriptions");
+            String[] devices = (String[]) listMethod.invoke(null);
+
+            if (devices == null || devices.length == 0) {
+                JOptionPane.showMessageDialog(null,
+                    i18n.tr("webcam.no.devices"),
+                    i18n.tr("qrcode.scan.title"), JOptionPane.WARNING_MESSAGE);
+                return -1;
+            }
+
+            if (devices.length == 1) {
+                return 0;
+            }
+
+            String selected = (String) JOptionPane.showInputDialog(null,
+                i18n.tr("webcam.select.device"),
+                i18n.tr("qrcode.scan.title"),
+                JOptionPane.QUESTION_MESSAGE,
+                null, devices, devices[0]);
+
+            if (selected == null) {
+                return -1;
+            }
+
+            for (int idx = 0; idx < devices.length; idx++) {
+                if (devices[idx].equals(selected)) {
+                    return idx;
+                }
+            }
+            return 0;
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private SepaData parseQrText(String qrText) throws ParserException {
