@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.willuhn.de/schema/jameica-plugin"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.willuhn.de/schema/jameica-plugin http://www.willuhn.de/schema/jameica-plugin-1.5.xsd"
-        name="hbci.qrtransfer" version="1.0.5"
+        name="hbci.qrtransfer" version="1.0.6"
         class="de.willuhn.jameica.hbci.qrtransfer.QRTransferPlugin">
 
   <description>SEPA QR Code transfer plugin for Hibiscus</description>
