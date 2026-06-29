@@ -189,6 +189,7 @@ The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys
 - Added webcam QR code scanning via JavaCV/OpenCV
 - Added navigation icons
 - Added keyboard shortcuts
+- **Known issue:** i18n was broken due to spaces in `.properties` keys, causing Jameica to crash or show garbled text on startup
 
 ### v1.0.0
 - Initial release with clipboard, file, and PDF input methods
