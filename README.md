@@ -65,7 +65,7 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
 - **Platform support:**
   - Windows (tested)
   - Linux (tested)
-  - macOS (not yet tested)
+  - macOS (tested - webcam requires camera permissions in System Settings > Privacy & Security > Camera)
 
 ## Screenshots
 
@@ -189,6 +189,9 @@ src/lang/
 The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys (no spaces in keys) to avoid Java Properties parsing issues. Navigation and menu items in `plugin.xml` use i18n keys that Jameica automatically resolves via `AbstractItemXml.getName()`.
 
 ## Version History
+
+### v1.0.9
+- Fixed webcam hang on macOS: VideoCapture.open() now runs with a 5-second timeout to prevent Jameica from becoming unresponsive when camera access fails or permissions are missing
 
 ### v1.0.8
 - Improved multiple QR code detection using ZXing's `GenericMultipleBarcodeReader` (finds all QR codes in one scan instead of one)
