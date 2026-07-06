@@ -61,11 +61,27 @@ public class QRWebcamAction implements Action {
             Class<?> captureClass = Class.forName("org.bytedeco.opencv.opencv_videoio.VideoCapture");
             capture = captureClass.getConstructor().newInstance();
 
-            // VideoCapture(int device)
-            captureClass.getMethod("open", int.class).invoke(capture, deviceIndex);
+            // VideoCapture.open() mit Timeout (blockiert auf macOS)
+            final Object cap = capture;
+            final int devIdx = deviceIndex;
+            java.util.concurrent.FutureTask<Boolean> openTask = new java.util.concurrent.FutureTask<>(() -> {
+                cap.getClass().getMethod("open", int.class).invoke(cap, devIdx);
+                return (Boolean) cap.getClass().getMethod("isOpened").invoke(cap);
+            });
+            Thread openThread = new Thread(openTask);
+            openThread.setDaemon(true);
+            openThread.start();
 
-            // Prüfen ob geöffnet
-            Boolean isOpened = (Boolean) captureClass.getMethod("isOpened").invoke(capture);
+            Boolean isOpened;
+            try {
+                isOpened = openTask.get(5, java.util.concurrent.TimeUnit.SECONDS);
+            } catch (java.util.concurrent.TimeoutException te) {
+                JOptionPane.showMessageDialog(null,
+                    i.tr("webcam.cannot.start", "open() timed out after 5s"),
+                    i.tr("qrcode.scan.title"), JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             if (!isOpened) {
                 JOptionPane.showMessageDialog(null,
                     i.tr("webcam.cannot.start", "isOpened() returned false"),
