@@ -26,9 +26,11 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class QRPdfAction implements Action {
 
+    private static final Logger logger = Logger.getLogger(QRPdfAction.class.getName());
     private static I18N i18n;
 
     private static synchronized I18N getI18n() {
@@ -65,12 +67,28 @@ public class QRPdfAction implements Action {
             }
 
             List<String> allQrTexts = extractAllQRCodesFromPDF(file);
+            logger.info("PDF: " + allQrTexts.size() + " QR code(s) found total");
+
+            for (int idx = 0; idx < allQrTexts.size(); idx++) {
+                String text = allQrTexts.get(idx);
+                String preview = text.length() > 80 ? text.substring(0, 80) + "..." : text;
+                logger.info("  QR[" + idx + "]: " + preview);
+            }
 
             if (allQrTexts.isEmpty()) {
                 throw new ApplicationException(i.tr("error.no.qrcode.pdf"));
             }
 
-            String qrText = QrCodeSelector.selectFromMultiple(allQrTexts, null);
+            List<String> validSepa = QrCodeSelector.filterValidSepa(allQrTexts);
+            logger.info("PDF: " + validSepa.size() + " valid SEPA code(s) after filtering");
+
+            if (validSepa.isEmpty()) {
+                throw new ApplicationException(i.tr("error.no.qrcode.pdf"));
+            }
+
+            String qrText = QrCodeSelector.selectFromMultiple(validSepa, null);
+            logger.info("PDF: selected qrText is null: " + (qrText == null));
+
             if (qrText == null) {
                 throw new ApplicationException(i.tr("error.no.qrcode.pdf"));
             }
@@ -79,8 +97,10 @@ public class QRPdfAction implements Action {
             GUI.startView(QRCodeView.class, sepaData);
 
         } catch (ApplicationException e) {
+            logger.warning("PDF ApplicationException: " + e.getMessage());
             throw e;
         } catch (Exception e) {
+            logger.warning("PDF Exception: " + e.getClass().getName() + ": " + e.getMessage());
             throw new ApplicationException(
                 i.tr("error.reading.qrcode.pdf", e.getMessage()), e
             );

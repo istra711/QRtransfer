@@ -44,6 +44,11 @@ The result exceeded expectations and shows that AI can serve as a capable "co-de
   - Amount and currency (EUR)
   - Payment reference / purpose
 
+- **Multiple QR code support:**
+  - Detects multiple QR codes in documents, images, and PDFs
+  - Shows selection dialog when multiple valid SEPA codes are found
+  - Automatically filters out invalid or non-SEPA QR codes
+
 - **Seamless Hibiscus integration:**
   - Adds a "QR Code Transfer" submenu under Zahlungsverkehr in the navigation tree
   - Creates a pre-filled transfer draft ready for review and sending
@@ -151,7 +156,8 @@ src/de/willuhn/jameica/hbci/qrtransfer/
 │   ├── QRCodeAction.java          # Read QR from clipboard
 │   ├── QRFileAction.java          # Read QR from image file
 │   ├── QRPdfAction.java           # Read QR from PDF
-│   └── QRWebcamAction.java        # Read QR from webcam (JavaCV/OpenCV)
+│   ├── QRWebcamAction.java        # Read QR from webcam (JavaCV/OpenCV)
+│   └── QrCodeSelector.java       # Multi-QR detection and selection
 ├── gui/
 │   ├── QRCodeView.java            # Preview and create transfer
 │   └── WelcomeView.java           # Landing page with action buttons
@@ -183,6 +189,12 @@ src/lang/
 The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys (no spaces in keys) to avoid Java Properties parsing issues. Navigation and menu items in `plugin.xml` use i18n keys that Jameica automatically resolves via `AbstractItemXml.getName()`.
 
 ## Version History
+
+### v1.0.8
+- Improved multiple QR code detection using ZXing's `GenericMultipleBarcodeReader` (finds all QR codes in one scan instead of one)
+- Invalid SEPA QR codes are now properly filtered out before selection (no more "Kein Parser" errors)
+- Added fallback detection with 2x2 quadrants and 3x3 grid when full-image detection finds nothing
+- Added logging for QR code detection and filtering
 
 ### v1.0.7
 - Multiple QR codes: If multiple valid SEPA QR codes are found in a document/image/PDF, a selection dialog is shown
