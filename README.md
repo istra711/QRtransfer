@@ -184,6 +184,10 @@ The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys
 
 ## Version History
 
+### v1.0.7
+- Multiple QR codes: If multiple valid SEPA QR codes are found in a document/image/PDF, a selection dialog is shown
+- Single QR codes are still processed directly without a dialog
+
 ### v1.0.6
 - Rewrote webcam to use VideoCapture instead of OpenCVFrameGrabber (better Linux V4L2 support)
 

@@ -65,7 +65,7 @@ public class QRFileAction implements Action {
                 throw new ApplicationException(i.tr("error.file.not.image", file.getName()));
             }
 
-            String qrText = decodeQRCode(image);
+            String qrText = QrCodeSelector.decodeAndSelect(image, null);
             if (qrText == null || qrText.isEmpty()) {
                 throw new ApplicationException(i.tr("error.no.qrcode.file", file.getName()));
             }
@@ -77,20 +77,6 @@ public class QRFileAction implements Action {
             throw e;
         } catch (Exception e) {
             throw new ApplicationException(i.tr("error.param", e.getMessage()), e);
-        }
-    }
-
-    private String decodeQRCode(BufferedImage image) throws Exception {
-        LuminanceSource source = new BufferedImageLuminanceSource(image);
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-        Map<DecodeHintType, Object> hints = new HashMap<>();
-        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.of(BarcodeFormat.QR_CODE));
-        try {
-            Result result = new MultiFormatReader().decode(bitmap, hints);
-            return result.getText();
-        } catch (NotFoundException e) {
-            return null;
         }
     }
 

@@ -54,7 +54,7 @@ public class QRCodeAction implements Action {
                 );
             }
 
-            String qrText = decodeQRCode(image);
+            String qrText = QrCodeSelector.decodeAndSelect(image, null);
             if (qrText == null || qrText.isEmpty()) {
                 throw new ApplicationException(
                     i.tr("error.no.qrcode.image")
@@ -93,20 +93,6 @@ public class QRCodeAction implements Action {
             }
             return null;
         } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private String decodeQRCode(BufferedImage image) throws Exception {
-        LuminanceSource source = new BufferedImageLuminanceSource(image);
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-        Map<DecodeHintType, Object> hints = new HashMap<>();
-        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.of(BarcodeFormat.QR_CODE));
-        try {
-            Result result = new MultiFormatReader().decode(bitmap, hints);
-            return result.getText();
-        } catch (NotFoundException e) {
             return null;
         }
     }

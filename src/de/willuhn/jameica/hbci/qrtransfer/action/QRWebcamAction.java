@@ -188,18 +188,27 @@ public class QRWebcamAction implements Action {
                         frameCount++;
                         if (frameCount % 3 == 0) {
                             try {
-                                LuminanceSource source = new BufferedImageLuminanceSource(image);
-                                BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-                                Result result = new MultiFormatReader().decode(bitmap, hints);
+                                java.util.List<String> allQr = QrCodeSelector.decodeMultiple(image);
+                                java.util.List<String> valid = QrCodeSelector.filterValidSepa(allQr);
 
-                                if (result != null && result.getText() != null) {
-                                    qrText[0] = result.getText();
-                                    found.set(true);
+                                if (!valid.isEmpty()) {
+                                    if (valid.size() == 1) {
+                                        qrText[0] = valid.get(0);
+                                    } else {
+                                        // Auswahldialog auf EDT anzeigen
+                                        final java.util.List<String> selectionList = valid;
+                                        SwingUtilities.invokeAndWait(() -> {
+                                            qrText[0] = QrCodeSelector.selectFromMultiple(selectionList, scanFrame);
+                                        });
+                                    }
 
-                                    SwingUtilities.invokeLater(() -> {
-                                        status.setText(i.tr("qrcode.detected"));
-                                        scanFrame.dispose();
-                                    });
+                                    if (qrText[0] != null) {
+                                        found.set(true);
+                                        SwingUtilities.invokeLater(() -> {
+                                            status.setText(i.tr("qrcode.detected"));
+                                            scanFrame.dispose();
+                                        });
+                                    }
                                 }
                             } catch (NotFoundException e) {
                                 // Kein QR-Code gefunden

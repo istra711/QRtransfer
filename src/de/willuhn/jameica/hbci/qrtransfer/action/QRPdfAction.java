@@ -21,8 +21,10 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class QRPdfAction implements Action {
@@ -62,11 +64,15 @@ public class QRPdfAction implements Action {
                 throw new ApplicationException(i.tr("error.file.not.found", path));
             }
 
-            String qrText = extractQRCodeFromPDF(file);
-            if (qrText == null || qrText.isEmpty()) {
-                throw new ApplicationException(
-                    i.tr("error.no.qrcode.pdf")
-                );
+            List<String> allQrTexts = extractAllQRCodesFromPDF(file);
+
+            if (allQrTexts.isEmpty()) {
+                throw new ApplicationException(i.tr("error.no.qrcode.pdf"));
+            }
+
+            String qrText = QrCodeSelector.selectFromMultiple(allQrTexts, null);
+            if (qrText == null) {
+                throw new ApplicationException(i.tr("error.no.qrcode.pdf"));
             }
 
             SepaData sepaData = parseQrText(qrText);
@@ -81,32 +87,21 @@ public class QRPdfAction implements Action {
         }
     }
 
-    private String extractQRCodeFromPDF(File file) throws Exception {
+    private List<String> extractAllQRCodesFromPDF(File file) throws Exception {
+        List<String> allQrTexts = new ArrayList<>();
         try (PDDocument document = Loader.loadPDF(file)) {
             PDFRenderer renderer = new PDFRenderer(document);
             for (int page = 0; page < document.getNumberOfPages(); page++) {
                 BufferedImage image = renderer.renderImageWithDPI(page, 200);
-                String qrText = decodeQRCode(image);
-                if (qrText != null && !qrText.isEmpty()) {
-                    return qrText;
+                List<String> pageQrCodes = QrCodeSelector.decodeMultiple(image);
+                for (String text : pageQrCodes) {
+                    if (text != null && !text.isEmpty() && !allQrTexts.contains(text)) {
+                        allQrTexts.add(text);
+                    }
                 }
             }
         }
-        return null;
-    }
-
-    private String decodeQRCode(BufferedImage image) throws Exception {
-        LuminanceSource source = new BufferedImageLuminanceSource(image);
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-        Map<DecodeHintType, Object> hints = new HashMap<>();
-        hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
-        hints.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.of(BarcodeFormat.QR_CODE));
-        try {
-            Result result = new MultiFormatReader().decode(bitmap, hints);
-            return result.getText();
-        } catch (NotFoundException e) {
-            return null;
-        }
+        return allQrTexts;
     }
 
     private SepaData parseQrText(String qrText) throws ParserException {
