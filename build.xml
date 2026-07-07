@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="hbci.qrtransfer" default="dist" basedir=".">
+<project name="hbci.qrtransfer" default="dist-all" basedir=".">
     <description>Hibiscus QR-Transfer Plugin</description>
 
     <!-- Properties -->
@@ -7,11 +7,11 @@
     <property name="lib.dir" value="lib"/>
     <property name="build.dir" value="build"/>
     <property name="build.classes" value="${build.dir}/classes"/>
-    <property name="build.stubs" value="${build.dir}/stubs"/>
     <property name="dist.dir" value="dist"/>
     <property name="plugin.name" value="hbci.qrtransfer"/>
     <property name="plugin.version" value="1.0.9"/>
     <property name="jameica.home" value="C:/Programme/Jameica"/>
+    <property name="saved.jars" value="${java.io.tmpdir}/qrtransfer-build/saved-jars"/>
 
     <!-- Classpath -->
     <path id="compile.classpath">
@@ -58,7 +58,7 @@
         </jar>
     </target>
 
-    <!-- Create distribution directory -->
+    <!-- Create distribution directory (single platform, from current lib/ state) -->
     <target name="dist" depends="jar">
         <mkdir dir="${dist.dir}/${plugin.name}"/>
         <copy file="${dist.dir}/${plugin.name}.jar" todir="${dist.dir}/${plugin.name}/"/>
@@ -82,11 +82,101 @@
         </copy>
     </target>
 
-    <!-- Create installable ZIP for Jameica -->
+    <!-- Create single-platform ZIP -->
     <target name="zip" depends="dist">
         <zip destfile="${dist.dir}/${plugin.name}-${plugin.version}.zip"
              basedir="${dist.dir}"
              includes="${plugin.name}/**"/>
+    </target>
+
+    <!-- ============================================================ -->
+    <!-- Platform-specific build targets                              -->
+    <!-- ============================================================ -->
+
+    <!-- Save all lib/ JARs to temp before modifying -->
+    <target name="save-jars">
+        <mkdir dir="${saved.jars}"/>
+        <copy todir="${saved.jars}">
+            <fileset dir="${lib.dir}">
+                <include name="**/*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- Restore lib/ JARs from temp -->
+    <target name="restore-jars">
+        <copy todir="${lib.dir}" overwrite="true">
+            <fileset dir="${saved.jars}">
+                <include name="**/*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- Macro: create dist directory + ZIP for one platform -->
+    <macrodef name="build-platform-zip">
+        <attribute name="platform"/>
+        <element name="remove-jars"/>
+        <sequential>
+            <remove-jars/>
+            <mkdir dir="${dist.dir}/${plugin.name}"/>
+            <copy file="${dist.dir}/${plugin.name}.jar" todir="${dist.dir}/${plugin.name}/"/>
+            <copy file="plugin.xml" todir="${dist.dir}/${plugin.name}/"/>
+            <copy todir="${dist.dir}/${plugin.name}/lib">
+                <fileset dir="${lib.dir}">
+                    <include name="**/*.jar"/>
+                    <exclude name="jameica.jar"/>
+                    <exclude name="hibiscus.jar"/>
+                </fileset>
+            </copy>
+            <copy todir="${dist.dir}/${plugin.name}/img">
+                <fileset dir="img"><include name="**/*"/></fileset>
+            </copy>
+            <copy todir="${dist.dir}/${plugin.name}/img">
+                <fileset dir="bilder"><include name="*-icon.png"/></fileset>
+            </copy>
+            <zip destfile="${dist.dir}/${plugin.name}-${plugin.version}-@{platform}.zip"
+                 basedir="${dist.dir}"
+                 includes="${plugin.name}/**"/>
+            <delete dir="${dist.dir}/${plugin.name}"/>
+        </sequential>
+    </macrodef>
+
+    <!-- Build all platform ZIPs (default target) -->
+    <target name="dist-all" depends="jar,save-jars">
+        <!-- Linux -->
+        <build-platform-zip platform="linux">
+            <remove-jars>
+                <delete>
+                    <fileset dir="${lib.dir}"><include name="*-windows-*"/></fileset>
+                    <fileset dir="${lib.dir}"><include name="*-macosx-*"/></fileset>
+                </delete>
+            </remove-jars>
+        </build-platform-zip>
+        <antcall target="restore-jars"/>
+
+        <!-- Windows -->
+        <build-platform-zip platform="windows">
+            <remove-jars>
+                <delete>
+                    <fileset dir="${lib.dir}"><include name="*-linux-*"/></fileset>
+                    <fileset dir="${lib.dir}"><include name="*-macosx-*"/></fileset>
+                </delete>
+            </remove-jars>
+        </build-platform-zip>
+        <antcall target="restore-jars"/>
+
+        <!-- macOS -->
+        <build-platform-zip platform="macos">
+            <remove-jars>
+                <delete>
+                    <fileset dir="${lib.dir}"><include name="*-windows-*"/></fileset>
+                    <fileset dir="${lib.dir}"><include name="*-linux-*"/></fileset>
+                </delete>
+            </remove-jars>
+        </build-platform-zip>
+        <antcall target="restore-jars"/>
+
+        <delete dir="${saved.jars}"/>
     </target>
 
     <!-- Clean -->
