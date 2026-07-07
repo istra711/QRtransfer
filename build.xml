@@ -9,7 +9,7 @@
     <property name="build.classes" value="${build.dir}/classes"/>
     <property name="dist.dir" value="dist"/>
     <property name="plugin.name" value="hbci.qrtransfer"/>
-    <property name="plugin.version" value="1.0.9"/>
+    <property name="plugin.version" value="1.0.10"/>
     <property name="jameica.home" value="C:/Programme/Jameica"/>
     <property name="saved.jars" value="${java.io.tmpdir}/qrtransfer-build/saved-jars"/>
 

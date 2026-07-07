@@ -190,6 +190,10 @@ The plugin uses Jameica's built-in `I18N` system with simple ASCII property keys
 
 ## Version History
 
+### v1.0.10
+- Fixed "Argument cannot be Null" error when opening image files from the top menu on Linux (actions triggered from the top menu run on a non-SWT thread; use `GUI.getShell()` instead of `Display.getCurrent().getActiveShell()`)
+- Replaced Python ZIP builder with pure Ant solution (Ant's `<zip>` task creates directory entries automatically, eliminating the "plugin zip-file empty" error on Linux Jameica)
+
 ### v1.0.9
 - Fixed webcam hang on macOS: VideoCapture.open() now runs with a 5-second timeout to prevent Jameica from becoming unresponsive when camera access fails or permissions are missing
 
