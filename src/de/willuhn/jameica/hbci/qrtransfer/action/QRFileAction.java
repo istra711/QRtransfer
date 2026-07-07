@@ -17,7 +17,6 @@ import com.google.zxing.common.HybridBinarizer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import java.awt.image.BufferedImage;
@@ -50,7 +49,7 @@ public class QRFileAction implements Action {
     public void handleAction(Object context) throws ApplicationException {
         final I18N i = getI18n();
         try {
-            Shell shell = Display.getCurrent().getActiveShell();
+            Shell shell = GUI.getShell();
             FileDialog dialog = new FileDialog(shell, SWT.OPEN);
             dialog.setText(i.tr("select.qrcode.image"));
             dialog.setFilterExtensions(new String[]{"*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"});
